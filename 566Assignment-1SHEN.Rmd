@@ -1,0 +1,113 @@
+---
+title: "Assignment01SHEN"
+output: html_document
+date: "2024-09-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE,message = FALSE,comment = "")
+```
+
+# 1
+
+```{r}
+install.packages("tidyverse")
+install.packages("data.table")
+```
+
+```{r}
+library(tidyverse)
+library(data.table)
+```
+
+```{r}
+df2002 <- fread("/Users/ckkkkkkkj/Desktop/ad_viz_plotval_data1.csv")
+df2022 <- fread("/Users/ckkkkkkkj/Desktop/ad_viz_plotval_data2.csv")
+dim(df2022)#Check dimension
+dim(df2002)#Check dimension
+names(df2022)#Check variable name
+names(df2002)#Check variable name
+apply(df2022,2,class)#Check variable type
+apply(df2002,2,class)#Check variable type
+```
+Compare PM2.5 levels in urban areas like Los Angeles and San Francisco with rural areas. Urban areas typically have higher levels.
+
+# 2
+
+```{r}
+newdat <- rbind(df2002,df2022)
+newdat$Date <- mdy(newdat$Date)
+newdat$Year <- year(newdat$Date)
+names(newdat)[3] <- "SiteID"
+names(newdat)[21] <- "Latitude"
+names(newdat)[22] <- "Longitude"
+```
+
+
+# 3
+
+```{r}
+install.packages("leaflet")
+```
+
+```{r}
+library(leaflet)
+newdat$color <- ifelse(newdat$Year == "2002","red","blue")
+# Create a basic map
+leaflet(newdat) %>%
+  addTiles() %>% # Add OpenStreetMap tiles
+  addCircleMarkers(lng = ~Longitude, lat = ~Latitude,color = ~ color,label = ~SiteID)
+```
+sites  near highways and traffic hub like airports,the pm2.5 obviously has a high level,
+
+# 4
+
+```{r}
+sum(is.na(newdat$`Daily Mean PM2.5 Concentration`))
+```
+
+```{r}
+newdat %>% 
+  group_by(`Daily Mean PM2.5 Concentration`) %>% 
+  summarise(Count = n()) %>% 
+  mutate(porp = Count / sum(Count))
+```
+
+```{r}
+newdat %>% 
+  group_by(Year) %>% 
+  summarise(MeanPM25 = mean(`Daily Mean PM2.5 Concentration`),
+            SdPM25 = sd(`Daily Mean PM2.5 Concentration`)) 
+```
+
+more sites were added in urban areas 2022,
+# 5
+
+```{r}
+summary(newdat$`Daily Mean PM2.5 Concentration`)
+```
+
+```{r}
+summary(newdat$`Daily AQI Value`)
+```
+
+```{r}
+ggplot(newdat,aes(x = `Daily AQI Value`))+
+  geom_boxplot()
+```
+
+```{r}
+ggplot(newdat,aes(x = `Daily AQI Value`,y = `Daily Mean PM2.5 Concentration`))+
+  geom_point()
+```
+
+
+```{r}
+newdat %>% 
+  group_by(Year) %>% 
+  summarise(MeanPM25 = mean(`Daily Mean PM2.5 Concentration`)) %>% 
+  ggplot(aes(x = Year,y = MeanPM25))+
+  geom_bar(stat = "identity")
+```
+Overall Decline in PM2.5 Levels，Decrease in High AQI Days
+
